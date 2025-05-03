@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,20 +11,135 @@
     <!-- Plotly.js -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
+        :root {
+            --bg-color: #fff;
+            --text-color: #212529;
+            --card-bg: #fff;
+            --card-border: rgba(0, 0, 0, 0.125);
+            --input-bg: #fff;
+            --input-border: #ced4da;
+            --table-border: #dee2e6;
+            --table-stripe: rgba(0, 0, 0, 0.05);
+            --table-hover: rgba(0, 0, 0, 0.075);
+            --modal-bg: #fff;
+            --dropdown-bg: #fff;
+            --dropdown-link-hover: #f8f9fa;
+            --positive-color: #28a745;
+            --negative-color: #dc3545;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #f8f9fa;
+            --card-bg: #1e1e1e;
+            --card-border: rgba(255, 255, 255, 0.125);
+            --input-bg: #2c2c2c;
+            --input-border: #495057;
+            --table-border: #343a40;
+            --table-stripe: rgba(255, 255, 255, 0.05);
+            --table-hover: rgba(255, 255, 255, 0.075);
+            --modal-bg: #2c2c2c;
+            --dropdown-bg: #2c2c2c;
+            --dropdown-link-hover: #343a40;
+            --positive-color: #5cb85c;
+            --negative-color: #d9534f;
+        }
+
         body {
             padding-top: 60px;
             padding-bottom: 40px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
+
+        .card {
+            background-color: var(--card-bg);
+            border-color: var(--card-border);
+        }
+
+        .card-header, .card-footer {
+            background-color: rgba(0, 0, 0, 0.03);
+            border-color: var(--card-border);
+        }
+
+        [data-theme="dark"] .card-header, [data-theme="dark"] .card-footer {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .table {
+            color: var(--text-color);
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: var(--table-stripe);
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: var(--table-hover);
+        }
+
+        .table td, .table th {
+            border-top: 1px solid var(--table-border);
+        }
+
+        .table thead th {
+            border-bottom: 2px solid var(--table-border);
+        }
+
+        .form-control, .input-group-text {
+            background-color: var(--input-bg);
+            border-color: var(--input-border);
+            color: var(--text-color);
+        }
+
+        .form-control:focus {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        .modal-content {
+            background-color: var(--modal-bg);
+            color: var(--text-color);
+        }
+
+        .dropdown-menu {
+            background-color: var(--dropdown-bg);
+            color: var(--text-color);
+            border-color: var(--card-border);
+        }
+
+        .dropdown-item {
+            color: var(--text-color);
+        }
+
+        .dropdown-item:hover, .dropdown-item:focus {
+            background-color: var(--dropdown-link-hover);
+        }
+
+        .list-group-item {
+            background-color: var(--card-bg);
+            border-color: var(--card-border);
+            color: var(--text-color);
+        }
+
+        .jumbotron {
+            background-color: var(--card-bg);
+        }
+
         .performance-positive {
-            color: green;
+            color: var(--positive-color);
         }
+
         .performance-negative {
-            color: red;
+            color: var(--negative-color);
         }
+
         .chart-container {
             height: 400px;
             margin-bottom: 30px;
         }
+
         .container-wider {
             width: 100%;
             padding-right: 15px;
@@ -32,25 +147,119 @@
             margin-right: auto;
             margin-left: auto;
         }
+
         @media (min-width: 576px) {
             .container-wider {
                 max-width: 640px; /* Default is 540px */
             }
         }
+
         @media (min-width: 768px) {
             .container-wider {
                 max-width: 860px; /* Default is 720px */
             }
         }
+
         @media (min-width: 992px) {
             .container-wider {
                 max-width: 1140px; /* Default is 960px */
             }
         }
+
         @media (min-width: 1200px) {
             .container-wider {
                 max-width: 1400px; /* Default is 1140px */
             }
+        }
+
+        /* Theme toggle switch */
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+            margin-left: 15px;
+        }
+
+        .theme-switch {
+            display: inline-block;
+            height: 24px;
+            position: relative;
+            width: 48px;
+        }
+
+        .theme-switch input {
+            display: none;
+        }
+
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            background-color: white;
+            bottom: 4px;
+            content: "";
+            height: 16px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 16px;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .theme-icon {
+            margin-right: 5px;
+            color: #f8f9fa;
+        }
+
+        /* Alert styling for dark mode */
+        [data-theme="dark"] .alert-info {
+            background-color: #1a3c4d;
+            border-color: #175e7c;
+            color: #d1ecf1;
+        }
+
+        [data-theme="dark"] .alert-success {
+            background-color: #1e4620;
+            border-color: #2a623d;
+            color: #d4edda;
+        }
+
+        [data-theme="dark"] .alert-warning {
+            background-color: #533f03;
+            border-color: #7c5e10;
+            color: #fff3cd;
+        }
+
+        [data-theme="dark"] .alert-danger {
+            background-color: #4c1d1b;
+            border-color: #721c24;
+            color: #f8d7da;
+        }
+
+        /* Background utility classes for dark mode */
+        [data-theme="dark"] .bg-light {
+            background-color: #2c2c2c !important;
+            color: var(--text-color) !important;
+        }
+
+        [data-theme="dark"] .text-muted {
+            color: #a0a0a0 !important;
         }
     </style>
     {% block extra_head %}{% endblock %}
@@ -73,6 +282,13 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('tickers') }}">Tickers</a>
+                    </li>
+                    <li class="nav-item theme-switch-wrapper">
+                        <span class="theme-icon"><i class="fas fa-moon"></i></span>
+                        <label class="theme-switch" for="checkbox">
+                            <input type="checkbox" id="checkbox" checked>
+                            <div class="slider"></div>
+                        </label>
                     </li>
                 </ul>
             </div>
@@ -100,7 +316,7 @@
     <!-- Footer -->
     <footer class="py-5 bg-dark mt-5">
         <div class="container">
-            <p class="m-0 text-center text-white">Investment Tracker &copy; 2023</p>
+            <p class="m-0 text-center text-white">Investment Tracker &copy; 2025</p>
         </div>
     </footer>
 
@@ -108,6 +324,39 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Theme Switcher Script -->
+    <script>
+        const toggleSwitch = document.querySelector('#checkbox');
+        const htmlElement = document.querySelector('html');
+        const themeIcon = document.querySelector('.theme-icon i');
+
+        // Function to set theme
+        function setTheme(isDark) {
+            if (isDark) {
+                htmlElement.setAttribute('data-theme', 'dark');
+                toggleSwitch.checked = true;
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                htmlElement.setAttribute('data-theme', 'light');
+                toggleSwitch.checked = false;
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Check for saved theme preference or use default (dark)
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        setTheme(currentTheme === 'dark');
+
+        // Listen for toggle switch change
+        toggleSwitch.addEventListener('change', function(e) {
+            setTheme(e.target.checked);
+        });
+    </script>
 
     {% block scripts %}{% endblock %}
 </body>
