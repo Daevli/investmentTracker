@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Investment Tracker - Home{% endblock %}
+
+{% block content %}
+<div class="jumbotron mt-4">
+    <h1 class="display-4">Investment Tracker</h1>
+    <p class="lead">Track your financial investments and monitor their performance over time.</p>
+    <hr class="my-4">
+    <p>Current Session ID: <strong>{{ current_session }}</strong></p>
+</div>
+
+<div class="row">
+    <!-- Session Management -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Session Management</h5>
+            </div>
+            <div class="card-body">
+                <h6>Save Current Session</h6>
+                <form action="{{ url_for('save_session') }}" method="post" class="mb-4">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="session_id" placeholder="Session ID (optional)">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">Save Session</button>
+                        </div>
+                    </div>
+                </form>
+
+                <h6>Available Sessions</h6>
+                {% if sessions %}
+                    <div class="list-group">
+                        {% for session_id in sessions %}
+                            <a href="{{ url_for('load_session', session_id=session_id) }}" class="list-group-item list-group-item-action">
+                                {{ session_id }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No saved sessions available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Users -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Users</h5>
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('add_user') }}" class="btn btn-success mb-3">Add New User</a>
+                
+                {% if users %}
+                    <div class="list-group">
+                        {% for user in users %}
+                            <a href="{{ url_for('user_profile', user_id=user.id) }}" class="list-group-item list-group-item-action">
+                                {{ user.name }}
+                                <span class="badge badge-primary float-right">{{ user.investments|length }} investments</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No users available. Add a user to get started.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Getting Started</h5>
+            </div>
+            <div class="card-body">
+                <ol>
+                    <li>Create a user profile by clicking "Add New User"</li>
+                    <li>Add investments to track by navigating to your user profile</li>
+                    <li>View detailed information about your investments</li>
+                    <li>Save your session to continue later</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

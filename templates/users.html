@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Investment Tracker - Users{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h2>Users</h2>
+        <p>Manage user profiles and their investments.</p>
+        <a href="{{ url_for('add_user') }}" class="btn btn-success mb-3">Add New User</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>User Profiles</h5>
+            </div>
+            <div class="card-body">
+                {% if users %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>ID</th>
+                                    <th>Created</th>
+                                    <th>Last Updated</th>
+                                    <th>Investments</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                    <tr>
+                                        <td>{{ user.name }}</td>
+                                        <td><small class="text-muted">{{ user.id }}</small></td>
+                                        <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>{{ user.last_updated.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>{{ user.investments|length }}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('user_profile', user_id=user.id) }}" class="btn btn-sm btn-primary">View Profile</a>
+                                                <a href="{{ url_for('remove_user', user_id=user.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to remove this user? All investments will be lost.')">Remove User</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        No users available. Add a user to get started.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Investment Tracker - Tickers{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h2>Tracked Tickers</h2>
+        <p>Financial instruments currently being tracked in the system.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Ticker List</h5>
+            </div>
+            <div class="card-body">
+                {% if tickers %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Name</th>
+                                    <th>Sector</th>
+                                    <th>Currency</th>
+                                    <th>Current Price</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticker in tickers %}
+                                    <tr>
+                                        <td>{{ ticker.tickerId }}</td>
+                                        <td>{{ ticker.name }}</td>
+                                        <td>{{ ticker.sector }}</td>
+                                        <td>{{ ticker.currency }}</td>
+                                        <td>{{ "%.2f"|format(ticker.get_current_price()) if ticker.get_current_price() else 'N/A' }}</td>
+                                        <td>
+                                            <a href="{{ url_for('ticker_details', ticker_id=ticker.tickerId) }}" class="btn btn-sm btn-primary">View Details</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        No tickers are currently being tracked. Tickers are added automatically when investments are created.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Information</h5>
+            </div>
+            <div class="card-body">
+                <p>Tickers are automatically added to the system when investments are created. Each ticker represents a financial instrument that can be tracked through Yahoo Finance.</p>
+                <p>To add a new ticker, create an investment for a user with that ticker symbol.</p>
+                
+                <h6>Popular Ticker Symbols:</h6>
+                <div class="row">
+                    <div class="col-md-3">
+                        <h6>US Stocks</h6>
+                        <ul>
+                            <li>AAPL - Apple Inc.</li>
+                            <li>MSFT - Microsoft Corp.</li>
+                            <li>AMZN - Amazon.com Inc.</li>
+                            <li>GOOGL - Alphabet Inc.</li>
+                            <li>TSLA - Tesla Inc.</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>ETFs</h6>
+                        <ul>
+                            <li>SPY - S&P 500 ETF</li>
+                            <li>VTI - Vanguard Total Stock Market ETF</li>
+                            <li>QQQ - Invesco QQQ Trust (Nasdaq)</li>
+                            <li>VEA - Vanguard FTSE Developed Markets ETF</li>
+                            <li>AGG - iShares Core U.S. Aggregate Bond ETF</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>European Stocks</h6>
+                        <ul>
+                            <li>SAP.DE - SAP SE</li>
+                            <li>SIE.DE - Siemens AG</li>
+                            <li>ASML.AS - ASML Holding</li>
+                            <li>MC.PA - LVMH</li>
+                            <li>NESN.SW - Nestlé</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>Cryptocurrencies</h6>
+                        <ul>
+                            <li>BTC-USD - Bitcoin USD</li>
+                            <li>ETH-USD - Ethereum USD</li>
+                            <li>XRP-USD - XRP USD</li>
+                            <li>ADA-USD - Cardano USD</li>
+                            <li>SOL-USD - Solana USD</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block title %}Investment Tracker - {{ user.name }}'s Profile{% endblock %}
+
+{% block extra_head %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+<style>
+    .tag-filter {
+        margin-bottom: 10px;
+    }
+    .clickable {
+        cursor: pointer;
+    }
+    .tag-badge {
+        margin-right: 3px;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h2>{{ user.name }}'s Investment Profile</h2>
+            <p>Manage and track investments for this user.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('refresh_investments', user_id=user.id) }}" class="btn btn-primary">
+                <i class="fas fa-sync-alt"></i> Refresh Data
+            </a>
+            <small class="d-block text-muted mt-1">Last updated: {{ user.last_updated.strftime('%Y-%m-%d %H:%M') }}</small>
+        </div>
+    </div>
+</div>
+
+<!-- Portfolio Summary -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Portfolio Value</h5>
+                <h2 class="display-4">€ {{ "%.2f"|format(total_value) }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Initial Investment</h5>
+                <h2 class="display-4">€ {{ "%.2f"|format(total_initial) }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card {% if overall_performance >= 0 %}text-white bg-success{% else %}text-white bg-danger{% endif %}">
+            <div class="card-body">
+                <h5 class="card-title">Overall Performance</h5>
+                <h2 class="display-4">{{ "%.2f"|format(overall_performance) }}%</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sold Investments Summary -->
+<div class="row mt-4">
+    <div class="col-12">
+        <h4>Sold Investments Summary</h4>
+    </div>
+</div>
+<div class="row mb-1">
+    <div class="col-12">
+        <div class="card text-white bg-secondary">
+            <div class="card-body py-1">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Total Sold Value</h5>
+                    <h5 class="mb-0">€ {{ "%.2f"|format(total_sold_value) }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mb-1">
+    <div class="col-12">
+        <div class="card text-white bg-secondary">
+            <div class="card-body py-1">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Initial Investment (Sold)</h5>
+                    <h5 class="mb-0">€ {{ "%.2f"|format(total_sold_initial) }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mb-1">
+    <div class="col-12">
+        <div class="card {% if total_sold_profit >= 0 %}text-white bg-success{% else %}text-white bg-danger{% endif %}">
+            <div class="card-body py-1">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Total Profit</h5>
+                    <h5 class="mb-0">€ {{ "%.2f"|format(total_sold_profit) }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card {% if sold_performance >= 0 %}text-white bg-success{% else %}text-white bg-danger{% endif %}">
+            <div class="card-body py-1">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Performance (Sold)</h5>
+                    <h5 class="mb-0">{{ "%.2f"|format(sold_performance) }}%</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Investments -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Investments</h5>
+                <a href="{{ url_for('add_investment', user_id=user.id) }}" class="btn btn-success">Add Investment</a>
+            </div>
+            <div class="card-body">
+                {% if investments %}
+                    <div class="form-group tag-filter">
+                        <label for="active-tag-filter">Filter by Tag:</label>
+                        <input type="text" class="form-control" id="active-tag-filter" placeholder="Enter tag to filter...">
+                        <small class="form-text text-muted">Enter a tag name to filter the table. Click on column headers to sort.</small>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="active-investments-table" class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th class="clickable">Ticker</th>
+                                    <th class="clickable">Name</th>
+                                    <th class="clickable">Initial Investment</th>
+                                    <th class="clickable">Shares</th>
+                                    <th class="clickable">Current Price</th>
+                                    <th class="clickable">Current Value</th>
+                                    <th class="clickable">Performance</th>
+                                    <th class="clickable">Start Date</th>
+                                    <th class="clickable">Tags</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for investment in investments %}
+                                    <tr>
+                                        <td>{{ investment.ticker }}</td>
+                                        <td>{{ investment.ticker_name }}</td>
+                                        <td>{{ investment.initial_investment }} {{ investment.currency }}</td>
+                                        <td>{{ "%.2f"|format(investment.number_of_shares) }}</td>
+                                        <td>{{ "%.2f"|format(investment.current_price) if investment.current_price else 'N/A' }} {{ investment.currency }}</td>
+                                        <td>{{ "%.2f"|format(investment.current_value) }} {{ investment.currency }}</td>
+                                        <td class="{% if investment.performance >= 0 %}performance-positive{% else %}performance-negative{% endif %}">
+                                            {{ "%.2f"|format(investment.performance) }}%
+                                        </td>
+                                        <td>{{ investment.start_date }}</td>
+                                        <td>
+                                            {% if investment.tags %}
+                                                {% for tag in investment.tags %}
+                                                    <span class="badge badge-info tag-badge" data-table="active">{{ tag }}</span>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('investment_details', user_id=user.id, investment_id=investment.id) }}" class="btn btn-sm btn-primary">Details</a>
+                                                <a href="{{ url_for('remove_investment', user_id=user.id, investment_id=investment.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to remove this investment?')">Remove</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        No investments yet. Click "Add Investment" to get started.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sold Investments -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Sold Investments</h5>
+            </div>
+            <div class="card-body">
+                {% if sold_investments %}
+                    <div class="form-group tag-filter">
+                        <label for="sold-tag-filter">Filter by Tag:</label>
+                        <input type="text" class="form-control" id="sold-tag-filter" placeholder="Enter tag to filter...">
+                        <small class="form-text text-muted">Enter a tag name to filter the table. Click on column headers to sort.</small>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="sold-investments-table" class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th class="clickable">Ticker</th>
+                                    <th class="clickable">Name</th>
+                                    <th class="clickable">Initial Investment</th>
+                                    <th class="clickable">Shares</th>
+                                    <th class="clickable">Purchase Price</th>
+                                    <th class="clickable">Selling Price</th>
+                                    <th class="clickable">Profit</th>
+                                    <th class="clickable">Return</th>
+                                    <th class="clickable">Start Date</th>
+                                    <th class="clickable">End Date</th>
+                                    <th class="clickable">Tags</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for investment in sold_investments %}
+                                    <tr>
+                                        <td>{{ investment.ticker }}</td>
+                                        <td>{{ investment.ticker_name }}</td>
+                                        <td>{{ investment.initial_investment }} {{ investment.currency }}</td>
+                                        <td>{{ "%.2f"|format(investment.number_of_shares) }}</td>
+                                        <td>{{ "%.2f"|format(investment.purchase_price) if investment.purchase_price else 'N/A' }} {{ investment.currency }}</td>
+                                        <td>{{ "%.2f"|format(investment.selling_price) }} {{ investment.currency }}</td>
+                                        <td class="{% if investment.profit >= 0 %}performance-positive{% else %}performance-negative{% endif %}">
+                                            {{ "%.2f"|format(investment.profit) }} {{ investment.currency }}
+                                        </td>
+                                        <td class="{% if investment.performance >= 0 %}performance-positive{% else %}performance-negative{% endif %}">
+                                            {{ "%.2f"|format(investment.performance) }}%
+                                        </td>
+                                        <td>{{ investment.start_date }}</td>
+                                        <td>{{ investment.end_date }}</td>
+                                        <td>
+                                            {% if investment.tags %}
+                                                {% for tag in investment.tags %}
+                                                    <span class="badge badge-info tag-badge" data-table="sold">{{ tag }}</span>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('remove_sold_investment', user_id=user.id, investment_id=investment.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to remove this sold investment?')">Remove</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        No sold investments yet.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Information -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>User Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">User ID:</dt>
+                    <dd class="col-sm-9">{{ user.id }}</dd>
+
+                    <dt class="col-sm-3">Created:</dt>
+                    <dd class="col-sm-9">{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+
+                    <dt class="col-sm-3">Last Updated:</dt>
+                    <dd class="col-sm-9">{{ user.last_updated.strftime('%Y-%m-%d %H:%M') }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- DataTables JS -->
+<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize DataTables for active investments
+        var activeTable = $('#active-investments-table').DataTable({
+            "paging": false,
+            "info": false,
+            "order": [], // No initial sorting
+            "columnDefs": [
+                { "orderable": false, "targets": 9 } // Disable sorting on Actions column
+            ]
+        });
+
+        // Initialize DataTables for sold investments
+        var soldTable = $('#sold-investments-table').DataTable({
+            "paging": false,
+            "info": false,
+            "order": [], // No initial sorting
+            "columnDefs": [
+                { "orderable": false, "targets": -1 } // Disable sorting on Actions column
+            ]
+        });
+
+        // Filter active investments table by tag
+        $('#active-tag-filter').on('keyup', function() {
+            var filterValue = $(this).val().toLowerCase();
+            activeTable.search(filterValue).draw();
+        });
+
+        // Filter sold investments table by tag
+        $('#sold-tag-filter').on('keyup', function() {
+            var filterValue = $(this).val().toLowerCase();
+            soldTable.search(filterValue).draw();
+        });
+
+        // Click on tag badge to filter table
+        $('.tag-badge').on('click', function() {
+            var tag = $(this).text();
+            var tableType = $(this).data('table');
+
+            if (tableType === 'active') {
+                $('#active-tag-filter').val(tag).trigger('keyup');
+                $('html, body').animate({
+                    scrollTop: $('#active-tag-filter').offset().top - 100
+                }, 200);
+            } else if (tableType === 'sold') {
+                $('#sold-tag-filter').val(tag).trigger('keyup');
+                $('html, body').animate({
+                    scrollTop: $('#sold-tag-filter').offset().top - 100
+                }, 200);
+            }
+        });
+    });
+</script>
+{% endblock %}

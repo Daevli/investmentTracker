@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Investment Tracker - {{ ticker.name }} ({{ ticker.tickerId }}){% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h2>{{ ticker.name }} ({{ ticker.tickerId }})</h2>
+        <p>Detailed information and price history for this financial instrument.</p>
+        <a href="{{ url_for('tickers') }}" class="btn btn-secondary mb-3">Back to Tickers</a>
+    </div>
+</div>
+
+<!-- Ticker Summary -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Current Price</h5>
+                <h2 class="display-4">{{ "%.2f"|format(ticker.get_current_price()) if ticker.get_current_price() else 'N/A' }}</h2>
+                <p>{{ ticker.currency }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title">Sector</h5>
+                <h4>{{ ticker.sector }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title">Currency</h5>
+                <h4>{{ ticker.currency }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title">Data Points</h5>
+                <h4>{{ ticker.closingPrices.shape[0] if not ticker.closingPrices.empty else 0 }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Price Chart -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Price History</h5>
+            </div>
+            <div class="card-body">
+                {% if chart_json %}
+                    <div id="priceChart" class="chart-container"></div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        No price data available for this ticker yet. Check back later as data is collected.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ticker Details -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Ticker Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Symbol:</dt>
+                    <dd class="col-sm-8">{{ ticker.tickerId }}</dd>
+                    
+                    <dt class="col-sm-4">Name:</dt>
+                    <dd class="col-sm-8">{{ ticker.name }}</dd>
+                    
+                    <dt class="col-sm-4">Sector:</dt>
+                    <dd class="col-sm-8">{{ ticker.sector }}</dd>
+                    
+                    <dt class="col-sm-4">Currency:</dt>
+                    <dd class="col-sm-8">{{ ticker.currency }}</dd>
+                    
+                    {% if ticker.dividendType %}
+                    <dt class="col-sm-4">Dividend Type:</dt>
+                    <dd class="col-sm-8">{{ ticker.dividendType }}</dd>
+                    {% endif %}
+                    
+                    {% if ticker.xDate %}
+                    <dt class="col-sm-4">Ex-Dividend Date:</dt>
+                    <dd class="col-sm-8">{{ ticker.xDate }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Price Data</h5>
+            </div>
+            <div class="card-body">
+                {% if not ticker.closingPrices.empty %}
+                    <dl class="row">
+                        <dt class="col-sm-4">Current Price:</dt>
+                        <dd class="col-sm-8">{{ "%.2f"|format(ticker.get_current_price()) }} {{ ticker.currency }}</dd>
+                        
+                        <dt class="col-sm-4">Data Range:</dt>
+                        <dd class="col-sm-8">{{ ticker.closingPrices.index[0].strftime('%Y-%m-%d') }} to {{ ticker.closingPrices.index[-1].strftime('%Y-%m-%d') }}</dd>
+                        
+                        <dt class="col-sm-4">Highest Price:</dt>
+                        <dd class="col-sm-8">{{ "%.2f"|format(ticker.closingPrices['Close'].max()) }} {{ ticker.currency }}</dd>
+                        
+                        <dt class="col-sm-4">Lowest Price:</dt>
+                        <dd class="col-sm-8">{{ "%.2f"|format(ticker.closingPrices['Close'].min()) }} {{ ticker.currency }}</dd>
+                        
+                        <dt class="col-sm-4">Average Price:</dt>
+                        <dd class="col-sm-8">{{ "%.2f"|format(ticker.closingPrices['Close'].mean()) }} {{ ticker.currency }}</dd>
+                    </dl>
+                {% else %}
+                    <div class="alert alert-warning">
+                        No price data available for this ticker yet.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Actions</h5>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-primary" onclick="updateTicker()">Update Data</button>
+                <a href="https://finance.yahoo.com/quote/{{ ticker.tickerId }}" target="_blank" class="btn btn-info">View on Yahoo Finance</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if chart_json %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var chartData = JSON.parse('{{ chart_json|safe }}');
+        Plotly.newPlot('priceChart', chartData.data, chartData.layout);
+    });
+</script>
+{% endif %}
+
+<script>
+    function updateTicker() {
+        // Show loading indicator
+        document.body.style.cursor = 'wait';
+        
+        // Make AJAX request to update ticker data
+        fetch('{{ url_for("ticker_details", ticker_id=ticker.tickerId) }}', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            // Reload the page to show updated data
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error updating ticker:', error);
+            alert('Error updating ticker data. Please try again.');
+            document.body.style.cursor = 'default';
+        });
+    }
+</script>
+{% endblock %}

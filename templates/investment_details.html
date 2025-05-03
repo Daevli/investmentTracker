@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Investment Tracker - Investment Details{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h2>Investment Details: {{ investment.ticker_name }} ({{ investment.ticker }})</h2>
+        <p>Detailed information and performance metrics for this investment.</p>
+        <a href="{{ url_for('user_profile', user_id=user.id) }}" class="btn btn-secondary mb-3">Back to Profile</a>
+    </div>
+</div>
+
+<!-- Investment Summary -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Current Value</h5>
+                <h2 class="display-4">{{ "%.2f"|format(investment.current_value) }}</h2>
+                <p>{{ investment.currency }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Initial Investment</h5>
+                <h2 class="display-4">{{ "%.2f"|format(investment.initial_investment) }}</h2>
+                <p>{{ investment.currency }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card {% if investment.performance >= 0 %}text-white bg-success{% else %}text-white bg-danger{% endif %}">
+            <div class="card-body">
+                <h5 class="card-title">Performance</h5>
+                <h2 class="display-4">{{ "%.2f"|format(investment.performance) }}%</h2>
+                <p>Since {{ investment.start_date }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Chart -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Performance History</h5>
+            </div>
+            <div class="card-body">
+                {% if chart_json %}
+                    <div id="performanceChart" class="chart-container"></div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        No performance data available for this investment yet. Check back later as data is collected.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Investment Details -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Investment Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Ticker Symbol:</dt>
+                    <dd class="col-sm-8">{{ investment.ticker }}</dd>
+
+                    <dt class="col-sm-4">Company/Fund:</dt>
+                    <dd class="col-sm-8">{{ investment.ticker_name }}</dd>
+
+                    <dt class="col-sm-4">Investment ID:</dt>
+                    <dd class="col-sm-8">{{ investment.id }}</dd>
+
+                    <dt class="col-sm-4">Start Date:</dt>
+                    <dd class="col-sm-8">{{ investment.start_date }}</dd>
+
+                    <dt class="col-sm-4">Status:</dt>
+                    <dd class="col-sm-8">{{ investment.end_date }}</dd>
+
+                    <dt class="col-sm-4">Tags:</dt>
+                    <dd class="col-sm-8">
+                        {% if investment.tags %}
+                            {% for tag in investment.tags %}
+                                <span class="badge badge-info">{{ tag }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted">No tags</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Financial Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Initial Investment:</dt>
+                    <dd class="col-sm-8">{{ "%.2f"|format(investment.initial_investment) }} {{ investment.currency }}</dd>
+
+                    <dt class="col-sm-4">Number of Shares:</dt>
+                    <dd class="col-sm-8">{{ "%.4f"|format(investment.number_of_shares) }}</dd>
+
+                    <dt class="col-sm-4">Purchase Price:</dt>
+                    <dd class="col-sm-8">{{ "%.2f"|format(investment.purchase_price) }} {{ investment.currency }}</dd>
+
+                    <dt class="col-sm-4">Current Price:</dt>
+                    <dd class="col-sm-8">{{ "%.2f"|format(investment.current_price) if investment.current_price else 'N/A' }} {{ investment.currency }}</dd>
+
+                    <dt class="col-sm-4">Current Value:</dt>
+                    <dd class="col-sm-8">{{ "%.2f"|format(investment.current_value) }} {{ investment.currency }}</dd>
+
+                    <dt class="col-sm-4">Performance:</dt>
+                    <dd class="col-sm-8 {% if investment.performance >= 0 %}performance-positive{% else %}performance-negative{% endif %}">
+                        {{ "%.2f"|format(investment.performance) }}%
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <form action="{{ url_for('update_tags', user_id=user.id, investment_id=investment.id) }}" method="post" class="mb-3">
+                            <div class="form-group">
+                                <label for="tags">Edit Tags</label>
+                                <input type="text" class="form-control" id="tags" name="tags" value="{{ investment.tags|join(', ') }}" placeholder="e.g., tech, long-term, dividend">
+                                <small class="form-text text-muted">Enter tags separated by commas to categorize your investment.</small>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Update Tags</button>
+                        </form>
+
+                        <form action="{{ url_for('sell_investment', user_id=user.id, investment_id=investment.id) }}" method="post" class="mb-3">
+                            <div class="form-group">
+                                <label for="selling_price">Sell Investment</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="selling_price" name="selling_price" step="0.01" min="0.01" value="{{ investment.current_price }}" required>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">{{ investment.currency }}</span>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Enter the selling price per share. Current market price is pre-filled.</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="sell_date">Sell Date and Time</label>
+                                <input type="datetime-local" class="form-control" id="sell_date" name="sell_date">
+                                <small class="form-text text-muted">Enter the date and time when the investment was sold (leave empty for current time).</small>
+                            </div>
+                            <button type="submit" class="btn btn-warning" onclick="return confirm('Are you sure you want to sell this investment?')">Sell Investment</button>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ url_for('ticker_details', ticker_id=investment.ticker) }}" class="btn btn-info">View Ticker Details</a>
+                        <a href="{{ url_for('remove_investment', user_id=user.id, investment_id=investment.id) }}" class="btn btn-danger" onclick="return confirm('Are you sure you want to remove this investment?')">Remove Investment</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if chart_json %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var chartData = JSON.parse('{{ chart_json|safe }}');
+        Plotly.newPlot('performanceChart', chartData.data, chartData.layout);
+    });
+</script>
+{% endif %}
+{% endblock %}

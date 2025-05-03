@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Investment Tracker - Add User{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h2>Add New User</h2>
+        <p>Create a new user profile to track investments.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>User Information</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('add_user') }}" method="post">
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                        <small class="form-text text-muted">Enter the user's full name.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create User</button>
+                    <a href="{{ url_for('users') }}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Information</h5>
+            </div>
+            <div class="card-body">
+                <p>After creating a user, you can:</p>
+                <ul>
+                    <li>Add investments to track</li>
+                    <li>Monitor investment performance</li>
+                    <li>View detailed analytics</li>
+                </ul>
+                <p>Each user can have multiple investments, and all data is saved with your session.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

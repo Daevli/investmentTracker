@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Investment Tracker - Add Investment{% endblock %}
+
+{% block extra_head %}
+<script>
+    function toggleInvestmentFields() {
+        // Get the selected investment type
+        var investmentType = document.querySelector('input[name="investment_type"]:checked').value;
+
+        // Get the input groups
+        var amountGroup = document.getElementById('amount_input_group');
+        var sharesGroup = document.getElementById('shares_input_group');
+
+        // Toggle visibility based on investment type
+        if (investmentType === 'amount') {
+            amountGroup.style.display = 'block';
+            sharesGroup.style.display = 'none';
+            document.getElementById('initial_investment').setAttribute('required', '');
+            document.getElementById('number_of_shares').removeAttribute('required');
+        } else {
+            amountGroup.style.display = 'none';
+            sharesGroup.style.display = 'block';
+            document.getElementById('initial_investment').removeAttribute('required');
+            document.getElementById('number_of_shares').setAttribute('required', '');
+        }
+    }
+
+    // Update currency display when currency selection changes
+    function updateCurrency() {
+        var currency = document.getElementById('currency').value;
+        document.getElementById('price_currency').textContent = currency;
+    }
+
+    // Initialize when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleInvestmentFields();
+        updateCurrency();
+
+        // Add event listener for currency changes
+        document.getElementById('currency').addEventListener('change', updateCurrency);
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h2>Add New Investment for {{ user.name }}</h2>
+        <p>Track a new financial instrument in this user's portfolio.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Investment Details</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('add_investment', user_id=user.id) }}" method="post">
+                    <div class="form-group">
+                        <label for="ticker_id">Ticker Symbol</label>
+                        <input type="text" class="form-control" id="ticker_id" name="ticker_id" required>
+                        <small class="form-text text-muted">Enter the Yahoo Finance ticker symbol (e.g., AAPL for Apple, MSFT for Microsoft).</small>
+                    </div>
+
+                    <!-- Investment Type Selection -->
+                    <div class="form-group">
+                        <label>Investment Type</label>
+                        <div class="custom-control custom-radio">
+                            <input type="radio" id="investment_type_amount" name="investment_type" value="amount" class="custom-control-input" checked onchange="toggleInvestmentFields()">
+                            <label class="custom-control-label" for="investment_type_amount">Specify Investment Amount</label>
+                        </div>
+                        <div class="custom-control custom-radio">
+                            <input type="radio" id="investment_type_shares" name="investment_type" value="shares" class="custom-control-input" onchange="toggleInvestmentFields()">
+                            <label class="custom-control-label" for="investment_type_shares">Specify Number of Shares</label>
+                        </div>
+                    </div>
+
+                    <!-- Investment Amount (shown when investment_type is 'amount') -->
+                    <div class="form-group" id="amount_input_group">
+                        <label for="initial_investment">Initial Investment</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="initial_investment" name="initial_investment" value="1000" min="1" step="0.01">
+                            <div class="input-group-append">
+                                <select class="form-control" id="currency" name="currency">
+                                    <option value="EUR">EUR</option>
+                                    <option value="USD">USD</option>
+                                    <option value="GBP">GBP</option>
+                                    <option value="JPY">JPY</option>
+                                    <option value="CHF">CHF</option>
+                                </select>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Enter the amount you want to invest.</small>
+                    </div>
+
+                    <!-- Number of Shares (shown when investment_type is 'shares') -->
+                    <div class="form-group" id="shares_input_group" style="display: none;">
+                        <label for="number_of_shares">Number of Shares</label>
+                        <input type="number" class="form-control" id="number_of_shares" name="number_of_shares" value="10" min="0.0001" step="0.0001">
+                        <small class="form-text text-muted">Enter the number of shares purchased.</small>
+                    </div>
+
+                    <!-- Purchase Price -->
+                    <div class="form-group">
+                        <label for="purchase_price">Purchase Price (per share)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="purchase_price" name="purchase_price" min="0.01" step="0.01">
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="price_currency">USD</span>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Enter the price per share at purchase time (leave empty to use current price).</small>
+                    </div>
+
+                    <!-- Purchase Date -->
+                    <div class="form-group">
+                        <label for="purchase_date">Purchase Date and Time</label>
+                        <input type="datetime-local" class="form-control" id="purchase_date" name="purchase_date">
+                        <small class="form-text text-muted">Enter the date and time when the investment was made (leave empty for current time).</small>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="form-group">
+                        <label for="tags">Tags</label>
+                        <input type="text" class="form-control" id="tags" name="tags" placeholder="e.g., tech, long-term, dividend">
+                        <small class="form-text text-muted">Enter tags separated by commas to categorize your investment.</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Add Investment</button>
+                    <a href="{{ url_for('user_profile', user_id=user.id) }}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Information</h5>
+            </div>
+            <div class="card-body">
+                <h6>How it works:</h6>
+                <ol>
+                    <li>Enter a valid ticker symbol from Yahoo Finance</li>
+                    <li>Choose whether to specify investment amount or number of shares:
+                        <ul>
+                            <li><strong>Investment Amount</strong>: Enter how much money you want to invest</li>
+                            <li><strong>Number of Shares</strong>: Enter how many shares you purchased</li>
+                        </ul>
+                    </li>
+                    <li>Optionally enter the purchase price per share (if left empty, current price will be used)</li>
+                    <li>Optionally enter the date and time of the investment (if left empty, current time will be used)</li>
+                    <li>Add tags to categorize your investments (e.g., tech, long-term, dividend)</li>
+                    <li>The system will calculate the investment details and track performance over time</li>
+                </ol>
+
+                <div class="alert alert-info">
+                    <strong>Tip:</strong> You can find ticker symbols by searching for the company or fund on <a href="https://finance.yahoo.com/" target="_blank">Yahoo Finance</a>.
+                </div>
+
+                <h6>Popular Tickers:</h6>
+                <div class="row">
+                    <div class="col-6">
+                        <ul>
+                            <li>AAPL - Apple Inc.</li>
+                            <li>MSFT - Microsoft Corp.</li>
+                            <li>AMZN - Amazon.com Inc.</li>
+                            <li>GOOGL - Alphabet Inc.</li>
+                        </ul>
+                    </div>
+                    <div class="col-6">
+                        <ul>
+                            <li>TSLA - Tesla Inc.</li>
+                            <li>SPY - S&P 500 ETF</li>
+                            <li>VTI - Vanguard Total Stock Market ETF</li>
+                            <li>BTC-USD - Bitcoin USD</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

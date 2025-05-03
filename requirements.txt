@@ -1,0 +1,7 @@
+pandas
+flask
+yfinance
+matplotlib
+plotly
+flask-wtf
+flask-bootstrap
