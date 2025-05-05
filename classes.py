@@ -422,6 +422,7 @@ class UserProfile:
         self.id = f"user_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{name.replace(' ', '_')}"
         self.created_at = datetime.datetime.now()
         self.last_updated = self.created_at
+        self.total_dividends = 0  # Total dividends not tied to any specific investment
 
     def add_investment(self, ticker, initial_investment=1000, currency='EUR', number_of_shares=None, purchase_price=None, purchase_date=None, tags=None):
         """Add a new investment to the user's portfolio"""
@@ -501,3 +502,14 @@ class UserProfile:
                 self.last_updated = datetime.datetime.now()
                 return True
         return False
+
+    def add_total_dividend(self, amount, date=None):
+        """Add a dividend to the total, not tied to any specific investment"""
+        # Ensure backward compatibility with older sessions
+        if not hasattr(self, 'total_dividends'):
+            self.total_dividends = 0
+
+        # Add the amount to the total
+        self.total_dividends += amount
+        self.last_updated = datetime.datetime.now()
+        return True

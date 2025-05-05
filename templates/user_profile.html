@@ -105,13 +105,25 @@
         </div>
     </div>
 </div>
-<div class="row mb-4">
+<div class="row mb-1">
     <div class="col-12">
         <div class="card {% if sold_performance >= 0 %}text-white bg-success{% else %}text-white bg-danger{% endif %}">
             <div class="card-body py-1">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Performance (Sold)</h5>
                     <h5 class="mb-0">{{ "%.2f"|format(sold_performance) }}%</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card text-white bg-success">
+            <div class="card-body py-1">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Total Dividends</h5>
+                    <h5 class="mb-0">€ {{ "%.2f"|format(total_dividends) }}</h5>
                 </div>
             </div>
         </div>
@@ -124,7 +136,12 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5>Investments</h5>
-                <a href="{{ url_for('add_investment', user_id=user.id) }}" class="btn btn-success">Add Investment</a>
+                <div>
+                    <button type="button" class="btn btn-success mr-2" data-toggle="modal" data-target="#addDividendModal">
+                        Add Dividend
+                    </button>
+                    <a href="{{ url_for('add_investment', user_id=user.id) }}" class="btn btn-success">Add Investment</a>
+                </div>
             </div>
             <div class="card-body">
                 {% if investments %}
@@ -282,6 +299,42 @@
                     <dt class="col-sm-3">Last Updated:</dt>
                     <dd class="col-sm-9">{{ user.last_updated.strftime('%Y-%m-%d %H:%M') }}</dd>
                 </dl>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Add Dividend Modal -->
+<div class="modal fade" id="addDividendModal" tabindex="-1" role="dialog" aria-labelledby="addDividendModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addDividendModalLabel">Add Dividend</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('add_total_dividend', user_id=user.id) }}" method="post" id="addDividendForm">
+                    <div class="form-group">
+                        <label for="dividend_amount">Dividend Amount</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="dividend_amount" name="dividend_amount" step="0.01" min="0.01" required>
+                            <div class="input-group-append">
+                                <span class="input-group-text">€</span>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Enter the total dividend amount received.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="dividend_date">Dividend Date and Time</label>
+                        <input type="datetime-local" class="form-control" id="dividend_date" name="dividend_date">
+                        <small class="form-text text-muted">Enter the date and time when the dividend was received (leave empty for current time).</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="submit" form="addDividendForm" class="btn btn-success">Add Dividend</button>
             </div>
         </div>
     </div>
