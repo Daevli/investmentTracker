@@ -36,6 +36,15 @@ pip install -r requirements.txt
 
 ## Usage
 
+### Option 1: Using the Batch File (Windows)
+
+1. Simply double-click the `start_app.bat` file in the project directory.
+   - This will automatically activate the virtual environment
+   - Start the Flask application
+   - Open your default web browser to the application
+
+### Option 2: Manual Startup
+
 1. Run the application:
 ```
 python app.py
