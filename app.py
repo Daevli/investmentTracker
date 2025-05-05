@@ -126,6 +126,9 @@ def user_profile(user_id):
     if total_sold_initial > 0:
         sold_performance = (total_sold_profit / total_sold_initial) * 100
 
+    # Get total dividends with backward compatibility
+    total_dividends = user.total_dividends if hasattr(user, 'total_dividends') else 0
+
     return render_template('user_profile.html', 
                           user=user, 
                           investments=investments,
@@ -136,7 +139,8 @@ def user_profile(user_id):
                           total_sold_value=total_sold_value,
                           total_sold_initial=total_sold_initial,
                           total_sold_profit=total_sold_profit,
-                          sold_performance=sold_performance)
+                          sold_performance=sold_performance,
+                          total_dividends=total_dividends)
 
 @app.route('/add_investment/<user_id>', methods=['GET', 'POST'])
 def add_investment(user_id):
@@ -360,6 +364,48 @@ def update_tags(user_id, investment_id):
 
     flash('Tags updated successfully', 'success')
     return redirect(url_for('investment_details', user_id=user.id, investment_id=investment.id))
+
+@app.route('/add_total_dividend/<user_id>', methods=['POST'])
+def add_total_dividend(user_id):
+    """Add a dividend to the total, not tied to any specific investment"""
+    user = None
+    for u in program_data.users:
+        if u.id == user_id:
+            user = u
+            break
+
+    if not user:
+        flash('User not found', 'danger')
+        return redirect(url_for('users'))
+
+    # Get dividend amount from form
+    try:
+        dividend_amount = float(request.form.get('dividend_amount', 0))
+    except ValueError:
+        flash('Invalid dividend amount', 'danger')
+        return redirect(url_for('user_profile', user_id=user.id))
+
+    if dividend_amount <= 0:
+        flash('Dividend amount must be greater than zero', 'danger')
+        return redirect(url_for('user_profile', user_id=user.id))
+
+    # Get dividend date from form if provided
+    dividend_date = None
+    dividend_date_str = request.form.get('dividend_date')
+    if dividend_date_str:
+        try:
+            # Parse the date string from the form
+            dividend_date = datetime.datetime.strptime(dividend_date_str, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            flash('Invalid date format. Using current date.', 'warning')
+
+    # Add the dividend to the total
+    if hasattr(user, 'add_total_dividend') and user.add_total_dividend(dividend_amount, dividend_date):
+        flash('Dividend added to total successfully', 'success')
+    else:
+        flash('Failed to add dividend to total', 'danger')
+
+    return redirect(url_for('user_profile', user_id=user.id))
 
 @app.route('/sell_investment/<user_id>/<investment_id>', methods=['POST'])
 def sell_investment(user_id, investment_id):
