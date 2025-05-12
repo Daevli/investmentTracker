@@ -106,6 +106,10 @@ class Ticker:
 
     def update_data(self, force=False):
         """Fetch data from Yahoo Finance API"""
+        # Ensure backward compatibility with older sessions
+        if not hasattr(self, 'update_interval'):
+            self.update_interval = datetime.timedelta(minutes=15)  # Default: update every 15 minutes
+
         # Check if we need to update the data
         current_time = datetime.datetime.now()
         if not force and self.last_updated and (current_time - self.last_updated) < self.update_interval:
@@ -148,6 +152,10 @@ class Ticker:
 
     def save_data_locally(self):
         """Save ticker data to local file"""
+        # Ensure backward compatibility with older sessions
+        if not hasattr(self, 'update_interval'):
+            self.update_interval = datetime.timedelta(minutes=15)  # Default: update every 15 minutes
+
         data = {
             'tickerId': self.tickerId,
             'name': self.name,
@@ -157,7 +165,8 @@ class Ticker:
             'intradayPrices': self.intradayPrices,
             'dividendType': self.dividendType,
             'xDate': self.xDate,
-            'last_updated': self.last_updated
+            'last_updated': self.last_updated,
+            'update_interval': self.update_interval
         }
 
         file_path = os.path.join(self.data_dir, f"{self.tickerId}.pkl")
@@ -180,6 +189,8 @@ class Ticker:
                 self.dividendType = data.get('dividendType', None)
                 self.xDate = data.get('xDate', None)
                 self.last_updated = data.get('last_updated', None)
+                # Load update_interval with a default if not present in saved data
+                self.update_interval = data.get('update_interval', datetime.timedelta(minutes=15))
                 return True
             except Exception as e:
                 print(f"Error loading data for {self.tickerId}: {e}")
